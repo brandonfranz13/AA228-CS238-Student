@@ -17,12 +17,34 @@ class BayesianStructureLearning:
     
     def buildNoEdgeGraph(self, nodeNames):
         graph = nx.DiGraph()
-        nodes = range(len(nodeNames))
-        graph.add_nodes_from(nodes)
+        graph.add_nodes_from(range(len(nodeNames)))
         return graph
     
-    def graphSearch(self, data):        
-        print("Graph Search Complete\n")
+    def isAcyclic(self, graph):
+        return nx.is_directed_acyclic_graph(graph)
+    
+    def graphSearch(self, nodeNames, data, method):
+        if method == 'K2':
+            graph = self.buildNoEdgeGraph(nodeNames)
+            orderedVariables = list(graph.nodes)
+            np.random.shuffle(orderedVariables)
+            for (k, i) in list(enumerate(orderedVariables[1:])):
+                score = self.scoreGraph(data, graph)
+                while True:
+                    score_best, j_best = -1000000, 0
+                    for j in orderedVariables[0:k]:
+                        if not(graph.has_edge(j, i)):
+                            graph.add_edge(j, i)
+                            score_new = self.scoreGraph(data, graph)
+                            if score_new > score_best:
+                                score_best, j_best = score_new, j
+                            graph.remove_edge(j, i)
+                    if score_best > score and self.isAcyclic(graph):
+                        score = score_best
+                        graph.add_edge(j_best, i)
+                    else:
+                        break
+            return graph, score
     
     def indexParentalInstantiation(self, numValues, varParents, parentSample):
         index = 0
@@ -52,28 +74,39 @@ class BayesianStructureLearning:
     def scoreGraph(self, data, graph):
         m = self.graphData(data, graph)
         variables = list(graph.nodes())
+        numParentalInstants = [len(m[i][:,0]) for i in range(len(variables))]
         score = 0
         alpha = [np.ones_like(m[var]) for var in variables]
         for var in variables:
-            p = np.sum(loggamma(alpha[var]+m[var]))
-            p -= np.sum(loggamma(alpha[var]))
-            p+= np.sum(loggamma(np.sum(alpha[var])))
-            p-= np.sum(loggamma(np.sum(alpha[var]) + np.sum(m[var])))
-            score += p
+            for instant in range(numParentalInstants[var]):
+                p = np.sum(loggamma(alpha[var][instant,:]+m[var][instant,:]))
+                p -= np.sum(loggamma(alpha[var][instant,:]))
+                p+= np.sum(loggamma(np.sum(alpha[var][instant,:])))
+                p-= np.sum(loggamma(np.sum(alpha[var][instant,:]) + np.sum(m[var][instant,:])))
+                score += p
         
-        return score #np.sum(p)
-        
-        
-        print("Scoring Complete\n")
+        return score
     
-    def writeFile_gph(self):
+    def writeFile_gph(self, nodeNames, graph):
+        with open(self.outputGraph, 'w') as f:
+            for edge in graph.edges():
+                f.write("{}, {}\n".format(nodeNames[edge[0]], nodeNames[edge[1]]))
+        f.close()
         print("Write Graph Complete\n")
 
     def solve(self):
         while True:
             variableNames, data = self.importCSV()
-            graph = self.graphSearch(data)
-            score = self.scoreGraph(graph)
-            out = self.writeGraph()
-            print("Solve Complete\n")
+            graph, score = self.graphSearch(variableNames, data, 'K2')
+            self.writeFile_gph(variableNames, graph)
+            print("Solve Complete with Score:")
+            print score
             break
+            
+    def solve_timed(self):
+        import time
+        start = time.time()
+        self.solve()
+        end = time.time()
+        print("\nRuntime (s):")
+        print end-start
