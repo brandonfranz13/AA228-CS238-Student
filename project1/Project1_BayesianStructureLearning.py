@@ -4,6 +4,9 @@ import pandas as pd
 import os
 import itertools
 import networkx as nx
+import matplotlib.pyplot as plt
+import pydot
+import time
 
 class BayesianStructureLearning:
 
@@ -25,14 +28,22 @@ class BayesianStructureLearning:
     
     def graphSearch(self, nodeNames, data, method):
         if method == 'K2':
+            start = time.time()
             graph = self.buildNoEdgeGraph(nodeNames)
             orderedVariables = list(graph.nodes)
             np.random.shuffle(orderedVariables)
             for (k, i) in list(enumerate(orderedVariables[1:])):
+                
                 score = self.scoreGraph(data, graph)
                 while True:
                     score_best, j_best = -1000000, 0
                     for j in orderedVariables[0:k]:
+                        end = time.time()
+                        if end-start > 600:
+                            self.writeFile_gph(nodeNames, graph)
+                            print("Graph Overwritten. Still Solving. Score:")
+                            print score
+                            start = time.time()
                         if not(graph.has_edge(j, i)):
                             graph.add_edge(j, i)
                             score_new = self.scoreGraph(data, graph)
@@ -94,6 +105,9 @@ class BayesianStructureLearning:
         f.close()
         print("Write Graph Complete\n")
 
+    def exportGraph(self, graph, path):
+        nx.nx_pydot.write_dot(graph,'example.txt')
+    
     def solve(self):
         while True:
             variableNames, data = self.importCSV()
@@ -104,7 +118,6 @@ class BayesianStructureLearning:
             break
             
     def solve_timed(self):
-        import time
         start = time.time()
         self.solve()
         end = time.time()
