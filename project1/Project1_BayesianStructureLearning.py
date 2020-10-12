@@ -61,6 +61,8 @@ class BayesianStructureLearning:
                             print("Graph Overwritten. Still Solving. Score:")
                             print score
                             start = time.time()
+                            nodeMapping = {list(graph.nodes())[i]: nodeNames[i] for i in range(len(nodeNames))} 
+                            graph = nx.relabel_nodes(graph, nodeMapping)
                     else:
                         break
             nodeMapping = {list(graph.nodes())[i]: nodeNames[i] for i in range(len(nodeNames))} 
