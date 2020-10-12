@@ -23,6 +23,15 @@ class BayesianStructureLearning:
         graph.add_nodes_from(range(len(nodeNames)))
         return graph
     
+    def buildGraph(self, nodeNames, gph):
+        with open(gph, 'r') as f:
+            data = f.read()
+        data = data.strip().split('\n')  
+        data = [data[i].strip().split(',') for i in range(len(data))]
+        graph = self.buildNoEdgeGraph(nodeNames)
+        graph.add_edges_from(data)
+        return graph
+    
     def isAcyclic(self, graph):
         return nx.is_directed_acyclic_graph(graph)
     
@@ -54,6 +63,8 @@ class BayesianStructureLearning:
                             start = time.time()
                     else:
                         break
+            nodeMapping = {list(graph.nodes())[i]: nodeNames[i] for i in range(len(nodeNames))} 
+            graph = nx.relabel_nodes(graph, nodeMapping)
             return graph, score
     
     def indexParentalInstantiation(self, numValues, varParents, parentSample):
@@ -100,12 +111,12 @@ class BayesianStructureLearning:
     def writeFile_gph(self, nodeNames, graph):
         with open(self.outputGraph, 'w') as f:
             for edge in graph.edges():
-                f.write("{}, {}\n".format(nodeNames[edge[0]], nodeNames[edge[1]]))
+                f.write("{}, {}\n".format(edge[0], edge[1]))
         f.close()
         print("Write Graph Complete\n")
 
     def exportGraph(self, graph, path):
-        nx.nx_pydot.write_dot(graph,'example.txt')
+        nx.nx_pydot.write_dot(graph, path)
     
     def solve(self):
         while True:
