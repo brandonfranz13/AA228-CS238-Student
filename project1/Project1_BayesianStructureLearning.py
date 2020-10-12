@@ -33,17 +33,10 @@ class BayesianStructureLearning:
             orderedVariables = list(graph.nodes)
             np.random.shuffle(orderedVariables)
             for (k, i) in list(enumerate(orderedVariables[1:])):
-                
                 score = self.scoreGraph(data, graph)
                 while True:
                     score_best, j_best = -1000000, 0
                     for j in orderedVariables[0:k]:
-                        end = time.time()
-                        if end-start > 600:
-                            self.writeFile_gph(nodeNames, graph)
-                            print("Graph Overwritten. Still Solving. Score:")
-                            print score
-                            start = time.time()
                         if not(graph.has_edge(j, i)):
                             graph.add_edge(j, i)
                             score_new = self.scoreGraph(data, graph)
@@ -53,6 +46,12 @@ class BayesianStructureLearning:
                     if score_best > score and self.isAcyclic(graph):
                         score = score_best
                         graph.add_edge(j_best, i)
+                        end = time.time()
+                        if end-start > 600:
+                            self.writeFile_gph(nodeNames, graph)
+                            print("Graph Overwritten. Still Solving. Score:")
+                            print score
+                            start = time.time()
                     else:
                         break
             return graph, score
