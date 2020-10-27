@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 def writePolicy(filename, actions):
-    np.savetxt(filename, actions, delimiter=",")
+    np.savetxt(filename, fmt='%i', actions, delimiter=",")
     
 def importCSV(filename):
     contents = pd.read_csv(filename)
@@ -17,10 +17,10 @@ class SmallRL():
 
     def __init__(self):
         _, sarsp = importCSV("data/small.csv")
-        self.s = sarsp[:,0].astype(int)
-        self.a = sarsp[:,1].astype(int)
-        self.r = sarsp[:,2].astype(int)
-        self.sp = sarsp[:,3].astype(int)
+        self.s = sarsp[:,0]
+        self.a = sarsp[:,1]
+        self.r = sarsp[:,2]
+        self.sp = sarsp[:,3]
         
     def explore(self):
         return True
