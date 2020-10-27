@@ -21,6 +21,18 @@ class SmallRL():
         self.r = sarsp[:,2]
         self.sp = sarsp[:,3]
         
+    def explore(self):
+        return True
+        
+    def learn(self):
+        return True
+    
+    def iterate(self):
+        return True
+    
+    def restart(self):
+        return True
+    
     def solve(self):
         writePolicy("small.policy", self.a)
         print "Policy Written to File"
