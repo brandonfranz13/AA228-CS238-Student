@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 def writePolicy(filename, actions):
-    np.savetxt(filename, fmt='%i', actions, delimiter=",")
+    np.savetxt(filename, actions, fmt='%i', delimiter=",")
     
 def importCSV(filename):
     contents = pd.read_csv(filename)
