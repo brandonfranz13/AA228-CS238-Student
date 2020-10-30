@@ -1,9 +1,8 @@
 import RL
 
 
-
 print "Test Solve"
-small = RL.SmallRL()
+medium = RL.MediumRL()
 
-small.solve()
+medium.solve()
 print "Test Solve Complete"
