@@ -1,8 +1,7 @@
 import RL
 
-
 print "Test Solve"
-medium = RL.MediumRL()
+large = RL.LargeRL(learning_rate = 0.1, max_iterations=100000, epochs=5)
 
-medium.solve()
+large.solve()
 print "Test Solve Complete"
