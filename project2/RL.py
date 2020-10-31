@@ -110,7 +110,7 @@ class MediumRL():
     does not quite satisfy the Markov property.
     '''
 
-    def __init__(self, discount=1, max_iterations=100):
+    def __init__(self, discount=1, learning_rate=0.5, max_iterations=100):
         _, sarsp = importCSV("data/medium.csv")
         self.s = sarsp[:,0]
         self.a = sarsp[:,1]
@@ -121,78 +121,41 @@ class MediumRL():
         self.n_actions = 7
         self.k_max = max_iterations
         self.gamma = discount
+        self.alpha = learning_rate
         
         self.S = range(1,self.n_states+1)
         self.A = range(1, self.n_actions+1)
-        
-        self.N = defaultdict(float)
-        self.n = defaultdict(float)
-        
-        self.rho = defaultdict(float)
-        
-        self.T = defaultdict(float)
-        self.R = defaultdict(float)
-        
+                
+        self.Q = defaultdict(float)
+                
         self.U = defaultdict(float)
         self.policy = defaultdict(int)
+
+    def 
+    
+    def learning_step(self, s, a, r, sp):
         
-    def countTransitions(self):
-        for i in range(len(self.s)):
-            s, a, sp = self.s[i], self.a[i], self.sp[i]
-            self.N[(s,a,sp)] += 1.
-            
-    def countTransitionsFromState(self, s, a):
-        n = 0
-        for sp in self.S:
-            n += self.N[(s,a,sp)]
-        return n
-                    
-    def accumulateReward(self):
-        for i in range(len(self.s)):
-            s, a = self.s[i], self.a[i]
-            self.rho[(s,a)] += self.r[i]
+        self.Q[(s,a)] += self.alpha * (r + self.gamma * max([self.Q[(sp,a)] for a in self.A]) - self.Q[(s,a)])
     
-    def calculateTransitionDist(self):
-        for s in self.S:
-            print s
-            for a in self.A:
-                for sp in self.S:
-                    n = self.countTransitionsFromState(s,a)
-                    if n == 0:
-                        pass
-                    else:
-                        self.T[(s,a,sp)] = self.N[(s,a,sp)] / n
-    
-    def calculateRewardDist(self):
-        for s in self.S:
-            for a in self.A:
-                n = self.countTransitionsFromState(s,a)
-                if n == 0:
-                    pass
-                else:
-                    self.R[(s,a)] = self.rho[(s,a)] / n
-                
     def lookahead(self, s, a): # for one state-action pair
-        n = self.countTransitionsFromState(s,a)
-        if n == 0:
+        if self.n[(s,a)] == 0:
             return 0.
-        TU = [self.N[(s,a,sp)] / countTransitionsFromState(s,a) * self.U[sp] for sp in self.S]
-        R = self.rho[(s,a)] / countTransitionsFromState(s,a)
-        return R + self.gamma * sum(TU)
+        return self.R[(s,a)] + self.gamma * sum([self.T[(s,a,sp)]*self.U[sp] for sp in self.S])
         
     def backup(self, s): #for every state-action pair at one state
         lookaheads = np.asarray([self.lookahead(s, a) for a in self.A])
         return np.max(lookaheads), lookaheads.argmax()+1
-        
-    
+           
     def solve(self):
         start = time.time()
         
         self.countTransitions()
+        self.countTransitionsFromState()
         self.accumulateReward()
+        self.calculateTransitionDist()
+        self.calculateRewardDist()
         
         for k in range(self.k_max):
-            print("k = %i".format(k))
             for s in self.S:
                 self.U[s], self.policy[s] = self.backup(s)
         
